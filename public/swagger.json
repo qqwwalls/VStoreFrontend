@@ -1,0 +1,105 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Steam Clone API",
+    "version": "1.0.0",
+    "description": "API documentation for the backend endpoints (Auth focus)"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local Backend Server"
+    }
+  ],
+  "paths": {
+    "/Auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "description": "Creates a new user account with email, username, and password.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration successful"
+          },
+          "400": {
+            "description": "User already exists or invalid data"
+          }
+        }
+      }
+    },
+    "/Auth/login": {
+      "post": {
+        "summary": "Log in to an account",
+        "description": "Authenticates a user and returns a JWT token.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful, returns token"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "PlayerOne"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "SecurePass123!"
+          }
+        },
+        "required": ["email", "username", "password"]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "accountName": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "SecurePass123!"
+          }
+        },
+        "required": ["accountName", "password"]
+      }
+    }
+  }
+}
