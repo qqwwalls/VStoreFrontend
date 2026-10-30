@@ -11,16 +11,16 @@ interface Props {
 
 export default function UserMenu({ onOpenWishlist, onOpenCart, onOpenAuth }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, setUser } = useStore();
+  const { user, logout } = useStore();
 
   const handleLogout = () => {
-    setUser(null);
+    void logout();
     setIsOpen(false);
   };
 
   if (!user) {
     return (
-      <button className="p-2 hover:text-white transition-colors active:scale-90" onClick={onOpenAuth}>
+      <button aria-label="Sign in" title="Sign in" className="p-2 hover:text-white transition-colors active:scale-90" onClick={onOpenAuth}>
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
       </button>
     );
@@ -28,16 +28,16 @@ export default function UserMenu({ onOpenWishlist, onOpenCart, onOpenAuth }: Pro
 
   return (
     <div className="relative">
-      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 p-2 hover:text-white transition-colors">
+      <button aria-label="Account menu" title="Account menu" onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 p-2 hover:text-white transition-colors">
         <div className="w-7 h-7 rounded-full bg-brand-accent text-black flex items-center justify-center font-bold text-sm">
-          {user.user?.charAt(0).toUpperCase() || 'U'}
+          {user.username.charAt(0).toUpperCase()}
         </div>
       </button>
       
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-brand-surface border border-gray-700 rounded-lg shadow-xl py-1 z-50">
           <div className="px-4 py-2 border-b border-gray-700">
-            <p className="text-sm font-medium text-white">{user.user}</p>
+            <p className="text-sm font-medium text-white break-words">{user.username}</p>
           </div>
           <Link 
             to="/profile" 
@@ -56,7 +56,7 @@ export default function UserMenu({ onOpenWishlist, onOpenCart, onOpenAuth }: Pro
             onClick={() => { onOpenCart(); setIsOpen(false); }} 
             className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
           >
-            Library
+            Cart
           </button>
           <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
             Sign Out

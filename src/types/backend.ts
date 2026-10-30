@@ -1,30 +1,44 @@
 
 
+import type { Achievement, SystemRequirements } from '../types';
+
 export interface UserDTO {
-    id: number;
-    username: string;
-    email: string;
-    description: string;
-    role: string;
-    isActive: boolean;
-    isVerified: boolean;
+  id: string;
+  username: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
+export interface AuthSession {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  refreshTokenExpiresAt: string;
+  user: UserDTO;
 }
 
 export interface GameCreateDTO {
-    name: string;
+    title: string;
     description: string;
     price: number;
-    developerId: number;
-    coverImageUrl?: string;
-    releaseDate: string;
+    developerId: string;
+    genreIds: number[];
+    tagIds: number[];
 }
 
 export interface GameReadDTO {
-    id: number;
-    name: string;
-    description: string;
+    id: string;
+    title: string;
+    description?: string;
     price: number;
-    developerId: number;
-    coverImageUrl: string;
+    developerId?: string;
+    developerName?: string;
+    coverImageUrl: string | null;
+    bannerImageUrl?: string | null;
     releaseDate: string;
+    media?: { id: number; url: string | null; type: number }[];
+    systemRequirements?: SystemRequirements[];
+    achievements?: Achievement[];
+    purchasedAt?: string;
+    playtime?: number;
 }

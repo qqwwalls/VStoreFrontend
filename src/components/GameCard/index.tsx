@@ -51,7 +51,7 @@ export default function GameCard({ game, layout = 'grid' }: Props) {
   if (layout === 'list') {
     return (
       <Link to={`/game/${game.id}`} className="flex items-center gap-4 group cursor-pointer hover:bg-brand-surface-hover p-2 rounded-lg transition-colors">
-        <img src={game.coverImageUrl} alt={game.title} className="w-16 h-20 object-cover rounded-md shadow-md group-hover:opacity-90 transition-opacity" />
+        <img src={game.coverImageUrl} alt={game.title} className="w-16 h-24 object-cover rounded-md shadow-md group-hover:opacity-90 transition-opacity" />
         <div className="flex flex-col">
           <span className="text-brand-text font-medium text-sm group-hover:text-white">{game.title}</span>
           {renderPrice()}
@@ -65,7 +65,7 @@ export default function GameCard({ game, layout = 'grid' }: Props) {
     return (
       <Link to={`/game/${game.id}`} className="flex flex-col group cursor-pointer">
         <div className="relative overflow-hidden rounded-t-lg">
-          <img src={game.coverImageUrl} alt={game.title} className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-300" />
+          <img src={game.bannerImageUrl || game.coverImageUrl} alt={game.title} className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-300" />
         </div>
         <div className={`py-1.5 text-center text-xs font-semibold rounded-b-lg ${isFreeNow ? 'bg-brand-accent text-black' : 'bg-brand-surface text-brand-text'}`}>
           {game.promoStatus}
@@ -84,7 +84,9 @@ export default function GameCard({ game, layout = 'grid' }: Props) {
         <img 
           src={game.coverImageUrl} 
           alt={game.title} 
-          className="w-full aspect-[3/4] object-cover rounded-lg shadow-md group-hover:opacity-90 transition-opacity"
+          loading="lazy"
+          decoding="async"
+          className="w-full aspect-[2/3] object-cover rounded-lg shadow-md group-hover:opacity-90 transition-opacity"
         />
         {layout === 'spotlight' && (
           <div className="absolute bottom-0 left-0 right-0 bg-[#83b063]/90 text-white text-center py-1.5 text-xs font-medium backdrop-blur-sm rounded-b-lg">

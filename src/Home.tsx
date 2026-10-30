@@ -2,9 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import HeroBanner from './components/HeroBanner';
 import GameCard from './components/GameCard';
 import { useGames } from './hooks/useGames';
+import { RefreshCw } from 'lucide-react';
 
 export default function Home() {
-  const { collections, freePromos, loading, error } = useGames();
+  const { games, collections, freePromos, loading, error, retry } = useGames();
   const navigate = useNavigate();
 
   if (loading) {
@@ -12,7 +13,7 @@ export default function Home() {
   }
 
   if (error) {
-    return <div className="p-12 text-center text-red-400">Failed to load store data. Please try again later.</div>;
+    return <div role="alert" className="p-12 text-center text-red-300"><p>{error}</p><button onClick={retry} className="mt-4 text-brand-accent">Retry</button></div>;
   }
 
   const grids = collections.filter(c => c.type === 'Grid' || c.type === 'Spotlight');
@@ -20,10 +21,11 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <HeroBanner />
+      <HeroBanner game={games.find(game => game.price?.isFree) || games[0]} />
+      {games.length === 0 && <p className="text-gray-400 py-12">The catalogue is empty.</p>}
 
       {/* Free Games Section */}
-      <section className="mb-12 bg-[#202428] rounded-xl p-6">
+      {freePromos.length > 0 && <section className="mb-12 border-y border-gray-800 py-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
@@ -31,7 +33,7 @@ export default function Home() {
           </div>
           <button 
             className="px-4 py-1.5 rounded border border-gray-600 text-sm hover:bg-gray-700 transition-all active:scale-95" 
-            onClick={() => navigate('/news')}
+            onClick={() => navigate('/search')}
           >
             View More
           </button>
@@ -41,22 +43,25 @@ export default function Home() {
             <GameCard key={game.id} game={game} layout="freePromo" />
           ))}
         </div>
-      </section>
+      </section>}
 
       {/* Grid Collections */}
       {grids.map(col => (
         <section key={col.title} className="mb-12">
-          <h2 className="text-xl font-medium text-white mb-4">{col.title}</h2>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <h2 className="text-xl font-medium text-white">{col.title}</h2>
+            <button aria-label="Refresh catalogue" title="Refresh catalogue" onClick={retry} className="p-2 text-gray-400 hover:text-white"><RefreshCw size={18} /></button>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {col.games.map(game => (
-              <GameCard key={game.id} game={game} layout={col.type.toLowerCase() as any} />
+              <GameCard key={game.id} game={game} layout={col.type === 'Spotlight' ? 'spotlight' : 'grid'} />
             ))}
           </div>
         </section>
       ))}
 
       {/* List Collections (Top Sellers, Most Played, etc) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 pt-8 border-t border-gray-800">
+      {lists.length > 0 && <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 pt-8 border-t border-gray-800">
         {lists.map(col => (
           <section key={col.title}>
             <div className="flex items-center justify-between mb-4 group cursor-pointer">
@@ -70,7 +75,7 @@ export default function Home() {
             </div>
           </section>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }

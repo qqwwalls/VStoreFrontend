@@ -7,11 +7,11 @@ interface Props {
 }
 
 export default function WishlistSidebar({ isOpen, onClose }: Props) {
-  const { wishlist, removeFromWishlist } = useStore();
+  const { wishlist, removeFromWishlist, privateLoading, privateError, reloadPrivateData } = useStore();
 
   return (
     <SidebarDrawer isOpen={isOpen} onClose={onClose} title="Wishlist">
-      {wishlist.length === 0 ? (
+      {privateLoading ? <p className="p-4 text-gray-400">Loading wishlist...</p> : privateError ? <div role="alert" className="p-4 text-red-300"><p>{privateError}</p><button onClick={reloadPrivateData} className="text-brand-accent mt-3">Retry</button></div> : wishlist.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-gray-400">
           <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
           <p>You haven't added anything yet.</p>
@@ -26,7 +26,7 @@ export default function WishlistSidebar({ isOpen, onClose }: Props) {
                   <p className="text-white font-medium truncate">{game.title}</p>
                   <p className="text-brand-accent text-sm">{game.price?.final ? `${game.price.currency} ${game.price.final}` : 'Free'}</p>
                 </div>
-                <button onClick={() => removeFromWishlist(game.id)} className="text-gray-400 hover:text-red-400 p-2">
+                <button aria-label={'Remove ' + game.title + ' from wishlist'} title="Remove from wishlist" onClick={() => void removeFromWishlist(game.id)} className="text-gray-400 hover:text-red-400 p-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>

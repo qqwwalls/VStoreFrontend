@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function CartSidebar({ isOpen, onClose }: Props) {
-  const { cart, removeFromCart, clearCart } = useStore();
+  const { cart, removeFromCart, user, authLoading, privateLoading, openAuth } = useStore();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   return (
@@ -31,7 +31,7 @@ export default function CartSidebar({ isOpen, onClose }: Props) {
                   <p className="text-white font-medium truncate">{game.title}</p>
                   <p className="text-brand-accent text-sm">{game.price?.final ? `${game.price.currency} ${game.price.final}` : 'Free'}</p>
                 </div>
-                <button onClick={() => removeFromCart(game.id)} className="text-gray-400 hover:text-red-400 p-2">
+                <button aria-label={'Remove ' + game.title + ' from cart'} title="Remove from cart" onClick={() => removeFromCart(game.id)} className="text-gray-400 hover:text-red-400 p-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -43,8 +43,15 @@ export default function CartSidebar({ isOpen, onClose }: Props) {
               <span>{cart.reduce((sum, g) => sum + (g.price?.final || 0), 0) > 0 ? `UAH ${cart.reduce((sum, g) => sum + (g.price?.final || 0), 0)}` : 'Free'}</span>
             </div>
             <button 
+              disabled={authLoading || privateLoading}
               className="w-full bg-brand-accent text-black font-bold py-3 rounded-lg hover:bg-green-400 transition-colors"
               onClick={() => {
+                if (!user) {
+                  setIsCheckoutOpen(false);
+                  onClose();
+                  openAuth();
+                  return;
+                }
                 setIsCheckoutOpen(true);
               }}
             >
@@ -55,10 +62,10 @@ export default function CartSidebar({ isOpen, onClose }: Props) {
       )}
       </SidebarDrawer>
       <CheckoutModal 
-        isOpen={isCheckoutOpen} 
+        isOpen={isOpen && isCheckoutOpen && Boolean(user)}
         onClose={() => setIsCheckoutOpen(false)} 
         games={cart} 
-        onSuccess={() => clearCart()} 
+        onSuccess={onClose}
       />
     </>
   );

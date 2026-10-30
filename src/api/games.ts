@@ -1,6 +1,12 @@
 import type { Game, GameCollection as Collection } from '../types';
+import type { GameReadDTO } from '../types/backend';
+import { apiClient } from './client';
+import fallbackCover from '../assets/hero.png';
 
-export function getMockCollections(): Collection[] {
+type MockGame = Omit<Game, 'id'> & { id: number };
+type MockCollection = Omit<Collection, 'games'> & { games: MockGame[] };
+
+export function getMockCollections(): MockCollection[] {
   return [
     {
       title: 'Discover Something New',
@@ -54,7 +60,7 @@ export function getMockCollections(): Collection[] {
   ];
 }
 
-export function getMockFreePromos(): Game[] {
+export function getMockFreePromos(): MockGame[] {
   return [
     { id: 10, title: 'Garden Story', coverImageUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1062140/capsule_616x353.jpg' },
     { id: 11, title: 'MAGES OF MYSTRALIA', coverImageUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/529660/capsule_616x353.jpg' },
@@ -62,7 +68,7 @@ export function getMockFreePromos(): Game[] {
   ];
 }
 
-export async function getGameById(id: number): Promise<Game> {
+export async function getMockGameById(id: number): Promise<MockGame> {
   const allCollections = getMockCollections();
   for (const collection of allCollections) {
     const game = collection.games.find(g => g.id === id);
@@ -94,4 +100,35 @@ export async function getGameById(id: number): Promise<Game> {
     price: { isFree: false, base: 515, discountPercentage: 0, final: 515, currency: 'UAH' },
     status: 'Coming Soon'
   };
+}
+
+export function fromApiGame(dto: GameReadDTO): Game {
+  return {
+    id: dto.id,
+    title: dto.title,
+    description: dto.description,
+    coverImageUrl: dto.coverImageUrl || fallbackCover,
+    bannerImageUrl: dto.bannerImageUrl || dto.coverImageUrl || fallbackCover,
+    gameType: 'Base Game',
+    price: { isFree: dto.price === 0, base: dto.price, final: dto.price, currency: 'UAH', discountPercentage: 0 },
+    status: new Date(dto.releaseDate).getTime() > Date.now() ? 'Coming soon' : 'Released',
+    promoStatus: dto.price === 0 ? 'FREE NOW' : undefined,
+    promoText: dto.price === 0 ? 'Free to play' : undefined,
+    developerName: dto.developerName,
+    releaseDate: dto.releaseDate,
+    purchasedAt: dto.purchasedAt,
+    playtime: dto.playtime,
+    systemRequirements: dto.systemRequirements,
+    achievements: dto.achievements,
+  };
+}
+
+export async function getGames(signal?: AbortSignal): Promise<Game[]> {
+  const response = await apiClient.get<GameReadDTO[]>('/game', { signal });
+  return response.data.map(fromApiGame);
+}
+
+export async function getGameById(id: string, signal?: AbortSignal): Promise<Game> {
+  const response = await apiClient.get<GameReadDTO>(`/game/${encodeURIComponent(id)}`, { signal });
+  return fromApiGame(response.data);
 }

@@ -1,143 +1,91 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { ArrowUpRight, Heart, LoaderCircle } from 'lucide-react';
 import { useStore } from './context/StoreContext';
 import { useGame } from './hooks/useGame';
-import AchievementsModal from './components/AchievementsModal/index';
+import AchievementsModal from './components/AchievementsModal';
+import AchievementItem from './components/AchievementItem';
 
 export default function GamePage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { game, loading, error } = useGame(id);
-  const { addToCart, addToWishlist, cart, wishlist } = useStore();
+  const { addToCart, addToWishlist, cart, wishlist, library, privateLoading } = useStore();
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
+  const [savingWishlist, setSavingWishlist] = useState(false);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-white">Loading...</div>;
-  
-  if (error || !game) return <div className="min-h-screen flex items-center justify-center text-red-400">Game not found</div>;
+  if (loading) return <div className="p-12 text-center text-gray-400">Loading game...</div>;
+  if (error || !game) return <div role="alert" className="p-12 text-center text-red-300">{error || 'Game not found.'}</div>;
+
+  const owned = library.some(item => item.id === game.id);
+  const inCart = cart.some(item => item.id === game.id);
+  const inWishlist = wishlist.some(item => item.id === game.id);
+  const requirements = game.systemRequirements || [];
+  const achievements = game.achievements || [];
+  const upcoming = game.status === 'Coming soon';
+
+  const saveWishlist = async () => {
+    setSavingWishlist(true);
+    try { await addToWishlist(game); }
+    finally { setSavingWishlist(false); }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <h1 className="text-3xl font-bold text-white mb-6">Your favorite new game!</h1>
-      
+      <h1 className="text-2xl md:text-3xl font-bold text-white mb-6 break-words">{game.title}</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-gray-800 aspect-video mb-8">
-            <img 
-              src={game.bannerImageUrl || game.coverImageUrl} 
-              alt={game.title} 
-              className="w-full h-full object-cover"
-            />
+        <div className="lg:col-span-2 min-w-0">
+          <div className="relative rounded-lg overflow-hidden bg-gray-900 aspect-video mb-8">
+            <img src={game.bannerImageUrl || game.coverImageUrl} alt={game.title} className="w-full h-full object-cover" />
           </div>
-
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">About this game</h2>
-            <p className="text-gray-300 leading-relaxed text-sm">
-              {game.description || "In this fascinating journey, players explore incredible landscapes and battle mythical beasts. Experience stunning graphics, an emotional storyline, and deep tactical combat. The world is yours to conquer or save. Forge alliances, gather resources, and uncover the ultimate truth of the realm."}
-            </p>
-          </div>
-
-          <div className="pt-8 border-t border-gray-800">
-            <h2 className="text-2xl font-bold text-white mb-6">System Requirements</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
-              <div className="space-y-2">
-                <h3 className="text-white font-semibold mb-3">Minimum:</h3>
-                <p className="text-brand-text-muted">OS: <span className="text-gray-300">Windows 10 64-bit</span></p>
-                <p className="text-brand-text-muted">Processor: <span className="text-gray-300">Intel Core i5-8400 / AMD Ryzen 3 3300X</span></p>
-                <p className="text-brand-text-muted">Memory: <span className="text-gray-300">12 GB RAM</span></p>
-                <p className="text-brand-text-muted">Graphics: <span className="text-gray-300">NVIDIA GeForce GTX 1060 / AMD Radeon RX 580</span></p>
-                <p className="text-brand-text-muted">Storage: <span className="text-gray-300">60 GB available space</span></p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-white font-semibold mb-3">Recommended:</h3>
-                <p className="text-brand-text-muted">OS: <span className="text-gray-300">Windows 10/11 64-bit</span></p>
-                <p className="text-brand-text-muted">Processor: <span className="text-gray-300">Intel Core i7-8700K / AMD Ryzen 5 3600X</span></p>
-                <p className="text-brand-text-muted">Memory: <span className="text-gray-300">16 GB RAM</span></p>
-                <p className="text-brand-text-muted">Graphics: <span className="text-gray-300">NVIDIA GeForce RTX 2070 / AMD Radeon RX 5700 XT</span></p>
-                <p className="text-brand-text-muted">Storage: <span className="text-gray-300">60 GB available space (SSD)</span></p>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-gray-800">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">Achievements</h2>
-            </div>
-            
-            <div className="flex gap-4 overflow-x-auto pb-4">
-              {[
-                { id: 1, title: 'First Steps', img: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/capsule_231x87.jpg' },
-                { id: 2, title: 'Explorer', img: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1172470/capsule_231x87.jpg' },
-                { id: 3, title: 'Combat', img: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2824660/capsule_231x87.jpg' },
-                { id: 4, title: 'Speed', img: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1771300/capsule_231x87.jpg' },
-                { id: 5, title: 'Master', img: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1119730/capsule_231x87.jpg' },
-              ].map(ach => (
-                <div key={ach.id} className="flex-shrink-0 flex flex-col gap-2 group cursor-pointer w-24">
-                  <div className="w-24 h-24 bg-gray-800 rounded border border-gray-700 overflow-hidden group-hover:border-brand-accent transition-colors relative">
-                    <img src={ach.img} alt={ach.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+          <section className="mb-8">
+            <h2 className="text-xl font-bold text-white mb-4">About this game</h2>
+            <p className="text-gray-300 leading-relaxed text-sm whitespace-pre-line">{game.description || 'No description has been provided.'}</p>
+          </section>
+          <section className="pt-6 border-t border-gray-800 mb-8">
+            <h2 className="text-xl font-bold text-white mb-5">System Requirements</h2>
+            {requirements.length === 0 ? <p className="text-sm text-gray-400">System requirements have not been provided.</p> : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+                {requirements.map(requirement => (
+                  <div key={requirement.id} className="space-y-2">
+                    <h3 className="font-semibold text-white mb-3">{requirement.type === 0 ? 'Minimum' : 'Recommended'}</h3>
+                    {[['OS', requirement.os], ['Processor', requirement.cpu], ['Memory', requirement.ram], ['Graphics', requirement.gpu], ['Storage', requirement.storage]].map(([label, value]) =>
+                      value ? <p key={label} className="text-gray-400">{label}: <span className="text-gray-200">{value}</span></p> : null)}
                   </div>
-                  <span className="text-xs text-center text-gray-400 group-hover:text-white line-clamp-2">{ach.title}</span>
-                </div>
-              ))}
-            </div>
-            
-            <button onClick={() => setIsAchievementsOpen(true)} className="text-brand-accent hover:underline text-sm font-medium mt-2">View all 96 &rarr;</button>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-brand-surface border border-gray-800 rounded-xl p-6 shadow-xl">
-            <div className="text-xs text-brand-text-muted uppercase tracking-wider mb-2">{game.gameType || 'Base Game'}</div>
-            <h2 className="text-2xl font-bold text-white mb-6">{game.title}</h2>
-            
-            {game.price?.isFree ? (
-              <div className="text-2xl font-bold text-brand-accent mb-6">Free To Play</div>
-            ) : (
-              <div className="text-2xl font-bold text-white mb-6">
-                {game.price?.currency} {game.price?.final}
+                ))}
               </div>
             )}
-            
-            <button 
-              className="w-full bg-brand-accent text-black font-bold py-3 rounded-lg hover:bg-green-400 transition-colors mb-4"
-              onClick={async () => {
-                if (game) addToCart(game);
-              }}
-            >
-              {cart.find(g => g.id === game.id) ? 'In Cart' : (game.price?.isFree ? 'Play Game' : 'Add to Cart')}
-            </button>
-            
-            <button 
-              className="w-full border border-gray-600 text-white font-semibold py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-              onClick={async () => {
-                if (game) addToWishlist(game);
-              }}
-            >
-              <svg className={`w-5 h-5 ${wishlist.find(g => g.id === game.id) ? 'fill-white text-white' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-              {wishlist.find(g => g.id === game.id) ? 'In Wishlist' : 'Add to Wishlist'}
-            </button>
-          </div>
-          
-          <div className="bg-brand-surface border border-gray-800 rounded-xl p-6 shadow-xl space-y-4 text-sm">
-            <div className="flex justify-between border-b border-gray-800 pb-3">
-              <span className="text-brand-text-muted">Developer</span>
-              <span className="text-white font-medium">V-Store Studios</span>
+          </section>
+          <section className="pt-6 border-t border-gray-800">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="text-xl font-bold text-white">Achievements</h2>
+              {achievements.length > 0 && <button onClick={() => setIsAchievementsOpen(true)} className="flex items-center gap-1 text-sm text-brand-accent hover:underline">View all {achievements.length}<ArrowUpRight size={16} aria-hidden="true" /></button>}
             </div>
-            <div className="flex justify-between border-b border-gray-800 pb-3">
-              <span className="text-brand-text-muted">Publisher</span>
-              <span className="text-white font-medium">V-Store Publishing</span>
-            </div>
-            <div className="flex justify-between border-b border-gray-800 pb-3">
-              <span className="text-brand-text-muted">Release Date</span>
-              <span className="text-white font-medium">{game.status === 'Released' ? 'Available Now' : game.status || 'Coming Soon'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-brand-text-muted">Platform</span>
-              <span className="text-white font-medium">Windows, Mac</span>
-            </div>
-          </div>
+            {achievements.length === 0 ? <p className="text-sm text-gray-400">No achievements have been provided.</p> : (
+              <ul aria-label="Available achievements" className="divide-y divide-gray-800">{achievements.slice(0, 3).map(achievement => <li key={achievement.id}><AchievementItem achievement={achievement} /></li>)}</ul>
+            )}
+          </section>
         </div>
+        <aside className="min-w-0">
+          <div className="border-y border-gray-700 py-6">
+            <p className="text-xs text-gray-400 uppercase mb-2">Base Game</p>
+            <h2 className="text-xl font-bold text-white mb-5 break-words">{game.title}</h2>
+            <p className="text-2xl font-bold text-white mb-6">{game.price?.isFree ? 'Free to play' : game.price?.currency + ' ' + game.price?.final}</p>
+            <button disabled={upcoming || privateLoading} onClick={() => owned ? navigate('/profile') : addToCart(game)} className="w-full bg-brand-accent text-black font-bold min-h-12 py-3 px-3 rounded hover:bg-green-400 mb-3 disabled:opacity-50">
+              {owned ? 'In library' : inCart ? 'In cart' : upcoming ? 'Coming soon' : 'Add to cart'}
+            </button>
+            <button disabled={savingWishlist || privateLoading} onClick={() => void saveWishlist()} className="w-full min-h-12 border border-gray-600 text-white font-semibold py-3 px-3 rounded hover:bg-gray-800 flex items-center justify-center gap-2 disabled:opacity-50">
+              {savingWishlist ? <LoaderCircle size={18} className="animate-spin" /> : <Heart size={18} fill={inWishlist ? 'currentColor' : 'none'} />}
+              {inWishlist ? 'In wishlist' : 'Add to wishlist'}
+            </button>
+            <dl className="text-sm mt-6 space-y-4">
+              <div><dt className="text-gray-400">Developer</dt><dd className="text-white mt-1 break-words">{game.developerName || 'Not provided'}</dd></div>
+              <div><dt className="text-gray-400">Availability</dt><dd className="text-white mt-1">{upcoming ? 'Coming soon' : 'Available now'}</dd></div>
+            </dl>
+          </div>
+        </aside>
       </div>
-      
-      <AchievementsModal isOpen={isAchievementsOpen} onClose={() => setIsAchievementsOpen(false)} />
+      <AchievementsModal isOpen={isAchievementsOpen} onClose={() => setIsAchievementsOpen(false)} achievements={achievements} />
     </div>
   );
 }
